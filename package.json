@@ -24,5 +24,8 @@
     "tap": false,
     "powerAssert": false,
     "babel": "inherit"
+  },
+  "dependencies": {
+    "lit-html": "^1.1.2"
   }
 }
