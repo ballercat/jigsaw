@@ -11,5 +11,18 @@
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10",
     "webpack-dev-server": "^3.10.1"
+  },
+  "ava": {
+    "files": [
+      "src/**/*.test.js"
+    ],
+    "source": [
+      "src/**/*.js"
+    ],
+    "failFast": true,
+    "failWithoutAssertions": false,
+    "tap": false,
+    "powerAssert": false,
+    "babel": "inherit"
   }
 }
