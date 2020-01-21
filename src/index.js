@@ -1,9 +1,9 @@
-import {html, render} from 'lit-html';
+import { html, render } from 'lit-html';
+import makeStore from './store';
+import Main from './frontend/main';
 
 const div = document.createElement('div');
 div.id = 'main';
 document.body.appendChild(div);
 
-const Test = () => html`<h1>Hello World!</h1>`;
-render(Test(), div);
-
+makeStore(store => render(Main(store), div)).dispatch({ type: 'init' });
