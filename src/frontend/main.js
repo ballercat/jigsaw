@@ -9,6 +9,7 @@ const Main = store => html`
       ...store.state.imageBlock,
       ...imageActions(store),
     })}
+    ${(/* modal implementation here */) => ''}
   </div>
 `;
 
