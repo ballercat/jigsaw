@@ -9,9 +9,9 @@ export default function ImageInput({
 }) {
   return html`
   <div>
-    <button @click=${onSave} ?disabled=${source == null}>Save</save>
+    <button @click=${onSave} ?disabled=${source == null}>Save</button>
     <button @click=${() =>
-      onLoad(savedImage)} ?disabled=${!savedImage}>Load</save>
+      onLoad(savedImage)} ?disabled=${!savedImage}>Load</button>
   </div>
   <div>
   <input type="file"></input>
