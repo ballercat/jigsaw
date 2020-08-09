@@ -20,13 +20,7 @@ const imageActions = store => {
     onSave() {
       const filereader = new FileReader();
       filereader.addEventListener('load', () => {
-	try {
-	  localStorage.setItem('image', filereader.result);
-	} catch(e) {
-	  const error = new Error('Image too large');
-	  error.type = 1;
-	  store.dispatch({ type: 'error', payload:  error });
-	}
+        localStorage.setItem('image', filereader.result);
       });
       filereader.readAsDataURL(store.state.imageBlock.blob);
     },

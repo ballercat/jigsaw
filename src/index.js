@@ -6,4 +6,4 @@ const div = document.createElement('div');
 div.id = 'main';
 document.body.appendChild(div);
 
-makeStore((store: Object) => render(Main(store), div)).dispatch({ type: 'init' });
+makeStore(store => render(Main(store), div)).dispatch({ type: 'init' });
