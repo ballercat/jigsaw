@@ -1,29 +1,18 @@
 import React, { useReducer } from 'react';
-import { Puzzle, actions as puzzleActions } from './Puzzle';
+import jigsaw from '../jigsaw';
+import { Puzzle } from './Puzzle';
 import { Toolbar } from './Toolbar';
 import './main.css';
 
 const reducer = (state, action) => {
   switch (action.type) {
-    case 'init':
-      const savedImage = localStorage.getItem('image');
-      return {
-        imageBlock: {
-          source: null,
-          savedImage,
-        },
-      };
     case 'load-image':
       return {
         ...state,
-        image: action.payload.source,
-        imageBlock: {
-          ...state.imageBlock,
-          ...action.payload,
-        },
+        ...action.payload,
       };
     case 'generate':
-      const puzzle = jigsaw(10, 10);
+      const puzzle = jigsaw(...action.payload);
       return {
         ...state,
         puzzle,
@@ -36,7 +25,8 @@ const reducer = (state, action) => {
 export const Main = () => {
   const savedImage = localStorage.getItem('image');
   const [state, dispatch] = useReducer(reducer, {
-    imageBlock: { source: null, savedImage },
+    source: null,
+    savedImage,
   });
   const store = { state, dispatch };
 

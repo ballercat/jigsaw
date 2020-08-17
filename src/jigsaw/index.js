@@ -1,4 +1,5 @@
 // jigsaw puzzle or whatever
+let uuid = 0;
 
 // Generate puzzle piece. One at a time, recursively
 function generate(x, y, w, h, pieces) {
@@ -19,7 +20,7 @@ function generate(x, y, w, h, pieces) {
     return y * w + x;
   };
 
-  const piece = {};
+  const piece = { id: ++uuid };
   piece.location = [x, y];
   pieces[loc(x, y)] = piece;
 
@@ -47,6 +48,8 @@ export default function jigsaw(width, height) {
   };
 
   return {
+    width,
+    height,
     pieces,
     at,
     test(piece) {},

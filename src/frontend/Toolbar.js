@@ -45,14 +45,14 @@ export const actions = store => {
       store.dispatch({ type: 'load-image', payload: { source, blob: null } });
     },
     onGenerate(width, height) {
-      store.dispatch({ type: 'generate', paylod: { width, height } });
+      store.dispatch({ type: 'generate', payload: [width, height] });
     },
   };
 };
 
 export const Toolbar = ({ store }) => {
   const { onSave, onLoad, onGenerate, onPaste } = actions(store);
-  const { source, savedImage } = store.state.imageBlock;
+  const { source, savedImage } = store.state;
   const handleLoad = () => onLoad(savedImage);
 
   return (
@@ -67,7 +67,9 @@ export const Toolbar = ({ store }) => {
           <button onClick={handleLoad}>Load</button>
         </div>
         <div style={styles.item}>
-          <button onClick={onGenerate}>Generate</button>
+          <button onClick={() => onGenerate(5, 5)} disabled={source == null}>
+            Generate
+          </button>
         </div>
         <div>
           <label htmlFor="paste">Paste Image</label>
