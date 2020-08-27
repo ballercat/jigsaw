@@ -1,5 +1,4 @@
 import React from 'react';
-import { styleMap } from 'lit-html/directives/style-map.js';
 
 const styles = {
   root: {
@@ -67,7 +66,7 @@ export const Toolbar = ({ store }) => {
           <button onClick={handleLoad}>Load</button>
         </div>
         <div style={styles.item}>
-          <button onClick={() => onGenerate(5, 5)} disabled={source == null}>
+          <button onClick={() => onGenerate(10, 10)} disabled={source == null}>
             Generate
           </button>
         </div>

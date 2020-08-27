@@ -5,6 +5,7 @@ export const Puzzle = ({ store }) => {
   const { source, puzzle } = store.state;
   const image = useRef(null);
   const canvasEl = useRef(null);
+  const containerEl = useRef(null);
 
   useEffect(() => {
     if (!(source && canvasEl.current)) {
@@ -23,15 +24,20 @@ export const Puzzle = ({ store }) => {
     };
   }, [source, canvasEl]);
 
+  const dimensions = useMemo(() => {
+    if (!canvasEl.current || !puzzle) return {};
+
+    const width = canvasEl.current.width / puzzle.width;
+    const height = canvasEl.current.height / puzzle.height;
+    return { width, height };
+  }, [canvasEl.current, puzzle]);
+
   const pieces = useMemo(() => {
     if (!puzzle) {
       return null;
     }
 
-    const width = canvasEl.current.width / puzzle.width;
-    const height = canvasEl.current.height / puzzle.height;
-    const dimensions = { width, height };
-
+    const { width, height } = dimensions;
     const sourceCtx = canvasEl.current.getContext('2d');
 
     const dest = document.createElement('canvas');
@@ -57,7 +63,11 @@ export const Puzzle = ({ store }) => {
     });
   }, [puzzle]);
 
-  console.log(pieces);
+  const getLocation = (x, y) => ({
+    top: dimensions.height * y,
+    left: dimensions.width * x,
+  });
+
   return (
     <div id="puzzle-container">
       {pieces ? (
@@ -65,7 +75,7 @@ export const Puzzle = ({ store }) => {
           <Piece
             key={piece.id}
             {...piece}
-            dimensions={dimensions}
+            {...getLocation(...piece.location)}
             dataURL={dataURL}
           />
         ))
