@@ -7,6 +7,17 @@ import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import Drawer from '@material-ui/core/Drawer';
 import Container from '@material-ui/core/Container';
+import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles(() => ({
+  fab: {
+    top: 'auto',
+    left: 'auto',
+    bottom: 20,
+    right: 20,
+    position: 'fixed',
+  },
+}));
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -34,10 +45,13 @@ export const Main = () => {
     savedImage,
   });
   const store = { state, dispatch };
+  const styles = useStyles();
 
   return (
     <Container fixed>
       <Fab
+        color="primary"
+        className={styles.fab}
         onClick={() => {
           setOpen(!open);
         }}
@@ -45,7 +59,7 @@ export const Main = () => {
         <AddIcon />
       </Fab>
       <Drawer open={open} onClose={() => setOpen(false)}>
-        <Toolbar open={open} store={store} />
+        <Toolbar open={open} store={store} onGenerate={() => setOpen(false)} />
       </Drawer>
       <Puzzle store={store} />
     </Container>

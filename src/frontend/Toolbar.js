@@ -1,4 +1,8 @@
 import React from 'react';
+import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
+import Grid from '@material-ui/core/Grid';
+import Box from '@material-ui/core/Box';
 
 const styles = {
   root: {
@@ -49,32 +53,35 @@ export const actions = store => {
   };
 };
 
-export const Toolbar = ({ store }) => {
+export const Toolbar = props => {
+  const { store } = props;
   const { onSave, onLoad, onGenerate, onPaste } = actions(store);
   const { source, savedImage } = store.state;
   const handleLoad = () => onLoad(savedImage);
 
   return (
     <div style={styles.root}>
-      <div style={styles.grid}>
-        <div style={styles.item}>
-          <button onClick={onSave} disabled={!!source}>
-            Save
-          </button>
-        </div>
-        <div style={styles.item}>
-          <button onClick={handleLoad}>Load</button>
-        </div>
-        <div style={styles.item}>
-          <button onClick={() => onGenerate(10, 10)} disabled={source == null}>
-            Generate
-          </button>
-        </div>
-        <div>
-          <label htmlFor="paste">Paste Image</label>
-          <input name="paste" type="text" onPaste={onPaste}></input>
-        </div>
-      </div>
+      <Box p={2}>
+        <Grid container direction="column">
+          <Grid item>
+            <Button onClick={onSave} disabled={!!source}>
+              Save
+            </Button>
+            <Button onClick={handleLoad}>Load</Button>
+            <Button
+              variant="contained"
+              onClick={() => props.onGenerate() || onGenerate(10, 10)}
+              disabled={source == null}
+              color="primary"
+            >
+              Generate
+            </Button>
+          </Grid>
+          <Grid item>
+            <TextField id="image-input" label="Paste Image" onPaste={onPaste} />
+          </Grid>
+        </Grid>
+      </Box>
     </div>
   );
 };
