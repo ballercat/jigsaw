@@ -1,13 +1,22 @@
 import React from 'react';
-import { Piece } from './Piece';
+import { Shape } from './Shape';
 
 export const Puzzle = ({ store }) => {
-  const { imageData, pieceSize, image } = store.state;
+  const { shapes, pieceSize, image } = store.state;
 
   return (
-    <div id="puzzle-container">
-      {Object.values(imageData).map(({ piece, dataURL, location }) => (
-        <Piece key={piece.id} {...piece} {...location} dataURL={dataURL} />
+    <div
+      id="puzzle-container"
+      style={{ width: `${image.width * 2}px`, height: `${image.height * 2}px` }}
+    >
+      {Object.values(shapes).map(({ id, pieces, dataURL, location }) => (
+        <Shape
+          key={id}
+          {...location}
+          dataURL={dataURL}
+          pieces={pieces}
+          {...pieceSize}
+        />
       ))}
     </div>
   );

@@ -34,15 +34,15 @@ const reducer = (state, action) => {
         moved: {},
       };
     case 'move': {
-      const { item, offset } = action.payload;
+      const { id, offset } = action.payload;
       const { pieceSize } = state;
-      const imageData = {
-        ...state.imageData,
+      const shapes = {
+        ...state.shapes,
         [item.id]: {
-          ...state.imageData[item.id],
+          ...state.shapes[id],
           location: {
-            top: offset.x - pieceSize.height / 2,
-            left: offset.y - pieceSize.width / 2,
+            top: offset.x,
+            left: offset.y,
           },
         },
       };
@@ -98,7 +98,9 @@ async function getImageData(imageSource, puzzle) {
   canvas.destination.width = pieceSize.width;
   canvas.destination.height = pieceSize.height;
 
-  const imageData = puzzle.pieces.reduce((acc, piece) => {
+  // We render "shapes", shapes are made up of one or more pieces. Starting
+  // point is a one-to-one grouping of shape per piece
+  const shapes = puzzle.pieces.reduce((acc, piece) => {
     const [x, y] = piece.location;
     // get imagedata from source, paint it to destination export to image
     const imageData = ctx.source.getImageData(
@@ -116,7 +118,8 @@ async function getImageData(imageSource, puzzle) {
     ctx.destination.putImageData(imageData, 0, 0);
 
     acc[piece.id] = {
-      piece,
+      id: piece.id,
+      pieces: [piece],
       dataURL: canvas.destination.toDataURL(),
       location: {
         top: piece.location[1] * pieceSize.height,
@@ -127,7 +130,7 @@ async function getImageData(imageSource, puzzle) {
     return acc;
   }, {});
 
-  return { imageData, pieceSize, image };
+  return { shapes, pieceSize, image };
 }
 
 export const Main = () => {
@@ -143,10 +146,10 @@ export const Main = () => {
   const handleGenerate = (width, height) => {
     const puzzle = jigsaw(width, height);
     getImageData(store.state.source, puzzle).then(
-      ({ imageData, pieceSize, image }) => {
+      ({ shapes, pieceSize, image }) => {
         store.dispatch({
           type: 'generate',
-          payload: { puzzle, imageData, pieceSize, image },
+          payload: { puzzle, shapes, pieceSize, image },
         });
         setOpen(false);
       }
