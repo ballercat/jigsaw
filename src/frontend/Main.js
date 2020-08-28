@@ -9,8 +9,6 @@ import AddIcon from '@material-ui/icons/Add';
 import Drawer from '@material-ui/core/Drawer';
 import Container from '@material-ui/core/Container';
 import { makeStyles } from '@material-ui/core/styles';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const useStyles = makeStyles(() => ({
   fab: {
@@ -129,7 +127,7 @@ async function getImageData(imageSource, puzzle) {
     return acc;
   }, {});
 
-  return { imageData, pieceSize };
+  return { imageData, pieceSize, image };
 }
 
 export const Main = () => {
@@ -145,10 +143,10 @@ export const Main = () => {
   const handleGenerate = (width, height) => {
     const puzzle = jigsaw(width, height);
     getImageData(store.state.source, puzzle).then(
-      ({ imageData, pieceSize }) => {
+      ({ imageData, pieceSize, image }) => {
         store.dispatch({
           type: 'generate',
-          payload: { puzzle, imageData, pieceSize },
+          payload: { puzzle, imageData, pieceSize, image },
         });
         setOpen(false);
       }
@@ -156,32 +154,30 @@ export const Main = () => {
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <Container fixed>
-        <Fab
-          color="primary"
-          className={styles.fab}
-          onClick={() => {
-            setOpen(!open);
-          }}
-        >
-          <AddIcon />
-        </Fab>
-        <Drawer open={open} onClose={() => setOpen(false)}>
-          <Toolbar open={open} store={store} onGenerate={handleGenerate} />
-        </Drawer>
-        {(() => {
-          if (store.state.puzzle) {
-            return <Puzzle store={store} />;
-          }
+    <Container fixed>
+      <Fab
+        color="primary"
+        className={styles.fab}
+        onClick={() => {
+          setOpen(!open);
+        }}
+      >
+        <AddIcon />
+      </Fab>
+      <Drawer open={open} onClose={() => setOpen(false)}>
+        <Toolbar open={open} store={store} onGenerate={handleGenerate} />
+      </Drawer>
+      {(() => {
+        if (store.state.puzzle) {
+          return <Puzzle store={store} />;
+        }
 
-          if (!store.state.source) {
-            return null;
-          }
+        if (!store.state.source) {
+          return null;
+        }
 
-          return <Preview source={store.state.source} />;
-        })()}
-      </Container>
-    </DndProvider>
+        return <Preview source={store.state.source} />;
+      })()}
+    </Container>
   );
 };
