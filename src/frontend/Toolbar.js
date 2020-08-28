@@ -48,14 +48,13 @@ export const actions = store => {
       store.dispatch({ type: 'load-image', payload: { source, blob: null } });
     },
     onGenerate(width, height) {
-      store.dispatch({ type: 'generate', payload: [width, height] });
     },
   };
 };
 
 export const Toolbar = props => {
-  const { store } = props;
-  const { onSave, onLoad, onGenerate, onPaste } = actions(store);
+  const { store, onGenerate } = props;
+  const { onSave, onLoad, onPaste } = actions(store);
   const { source, savedImage } = store.state;
   const handleLoad = () => onLoad(savedImage);
 
@@ -70,7 +69,7 @@ export const Toolbar = props => {
             <Button onClick={handleLoad}>Load</Button>
             <Button
               variant="contained"
-              onClick={() => props.onGenerate() || onGenerate(10, 10)}
+              onClick={() => onGenerate(10, 10)}
               disabled={source == null}
               color="primary"
             >
