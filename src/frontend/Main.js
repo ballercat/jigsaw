@@ -9,6 +9,7 @@ import AddIcon from '@material-ui/icons/Add';
 import Drawer from '@material-ui/core/Drawer';
 import Container from '@material-ui/core/Container';
 import { makeStyles } from '@material-ui/core/styles';
+import { add, multiply } from '../vector';
 
 const useStyles = makeStyles(() => ({
   fab: {
@@ -19,6 +20,15 @@ const useStyles = makeStyles(() => ({
     position: 'fixed',
   },
 }));
+
+const check = (a, b) => {
+  return Math.abs(a - b) < 5;
+};
+const distance = (v1, v2) => {
+  const [x1, y1] = v1;
+  const [x2, y2] = v2;
+  return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+};
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -31,24 +41,54 @@ const reducer = (state, action) => {
       return {
         ...state,
         ...action.payload,
-        moved: {},
       };
     case 'move': {
       const { id, offset } = action.payload;
-      const { pieceSize } = state;
-      const shapes = {
-        ...state.shapes,
-        [item.id]: {
-          ...state.shapes[id],
-          location: {
-            top: offset.x,
-            left: offset.y,
-          },
-        },
+      const { shapes, size } = state;
+      // find if the item is next to one of it's neighbors
+      const shape = {
+        ...shapes[id],
+
+        loc: [offset.x, offset.y],
       };
+      const result = {};
+
+      if (shape.pieces[0].top) {
+        const top = shapes[shape.pieces[0].top.id];
+        result.top =
+          distance(add(shape.loc, shape.v[0]), add(top.loc, top.v[2])) < 5 &&
+          distance(add(shape.loc, shape.v[1]), add(top.loc, top.v[3])) < 5;
+      }
+      if (shape.pieces[0].bottom) {
+        const bottom = shapes[shape.pieces[0].bottom.id];
+        result.bottom =
+          distance(add(shape.loc, shape.v[2]), add(bottom.loc, bottom.v[0])) <
+            5 &&
+          distance(add(shape.loc, shape.v[3]), add(bottom.loc, bottom.v[1])) <
+            5;
+      }
+      if (shape.pieces[0].left) {
+        const left = shapes[shape.pieces[0].left.id];
+        result.left =
+          distance(add(shape.loc, shape.v[0]), add(left.loc, left.v[1])) < 5 &&
+          distance(add(shape.loc, shape.v[2]), add(left.loc, left.v[3])) < 5;
+      }
+      if (shape.pieces[0].right) {
+        const right = shapes[shape.pieces[0].right.id];
+        result.right =
+          distance(add(shape.loc, shape.v[1]), add(right.loc, right.v[0])) <
+            5 &&
+          distance(add(shape.loc, shape.v[3]), add(right.loc, right.v[2])) < 5;
+      }
+
+      console.log(result);
+
       return {
         ...state,
-        imageData,
+        shapes: {
+          ...shapes,
+          [id]: shape,
+        },
       };
     }
     default:
@@ -84,10 +124,7 @@ async function getImageData(imageSource, puzzle) {
     source: canvas.source.getContext('2d'),
     destination: canvas.destination.getContext('2d'),
   };
-  const pieceSize = {
-    width: image.width / puzzle.width,
-    height: image.height / puzzle.height,
-  };
+  const size = [image.width / puzzle.width, image.height / puzzle.height];
 
   // Draw the image so that we can extract image data from it
   canvas.source.width = image.width;
@@ -95,8 +132,8 @@ async function getImageData(imageSource, puzzle) {
   ctx.source.drawImage(image, 0, 0);
 
   // Prep the destination canvas to be the size of a singe puzzle piece
-  canvas.destination.width = pieceSize.width;
-  canvas.destination.height = pieceSize.height;
+  canvas.destination.width = size[0];
+  canvas.destination.height = size[1];
 
   // We render "shapes", shapes are made up of one or more pieces. Starting
   // point is a one-to-one grouping of shape per piece
@@ -104,10 +141,10 @@ async function getImageData(imageSource, puzzle) {
     const [x, y] = piece.location;
     // get imagedata from source, paint it to destination export to image
     const imageData = ctx.source.getImageData(
-      pieceSize.width * x,
-      pieceSize.height * y,
-      pieceSize.width,
-      pieceSize.height
+      size[0] * x,
+      size[1] * y,
+      size[0],
+      size[1]
     );
     ctx.destination.clearRect(
       0,
@@ -121,16 +158,14 @@ async function getImageData(imageSource, puzzle) {
       id: piece.id,
       pieces: [piece],
       dataURL: canvas.destination.toDataURL(),
-      location: {
-        top: piece.location[1] * pieceSize.height,
-        left: piece.location[0] * pieceSize.width,
-      },
+      loc: multiply(piece.location, size),
+      v: [[0, 0], [size[0], 0], [0, size[1]], [...size]],
     };
 
     return acc;
   }, {});
 
-  return { shapes, pieceSize, image };
+  return { shapes, size, image };
 }
 
 export const Main = () => {
@@ -145,15 +180,13 @@ export const Main = () => {
 
   const handleGenerate = (width, height) => {
     const puzzle = jigsaw(width, height);
-    getImageData(store.state.source, puzzle).then(
-      ({ shapes, pieceSize, image }) => {
-        store.dispatch({
-          type: 'generate',
-          payload: { puzzle, shapes, pieceSize, image },
-        });
-        setOpen(false);
-      }
-    );
+    getImageData(store.state.source, puzzle).then(({ shapes, size, image }) => {
+      store.dispatch({
+        type: 'generate',
+        payload: { puzzle, shapes, size, image },
+      });
+      setOpen(false);
+    });
   };
 
   return (

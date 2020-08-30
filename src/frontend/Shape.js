@@ -1,15 +1,57 @@
-import React from 'react';
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import Draggable from 'react-draggable';
 import { Piece } from './Piece';
 
-export const Shape = ({ id, pieces, dataURL, top, left }) => {
+export const Shape = ({ id, pieces, dataURL, loc, size, onDrop }) => {
+  const [drag, setDrag] = useState(false);
+
   return (
-    <Draggable defaultPosition={{ x: 50, y: 50 }}>
-      <div style={{ position: 'absolute' }}>
-        {pieces.map(piece => (
-          <Piece key={piece.id} dataURL={dataURL} />
-        ))}
-      </div>
-    </Draggable>
+    <>
+      <div
+        style={{
+          position: 'absolute',
+          top: `${loc[0]}px`,
+          left: `${loc[1]}px`,
+          width: '5px',
+          height: '5px',
+          backgroundColor: 'red',
+          zIndex: '100',
+        }}
+      />
+      <Draggable
+        defaultPosition={{ x: loc[0], y: loc[1] }}
+        onStop={(_, { x, y }) => {
+          onDrop(id, { x, y });
+          setDrag(false);
+        }}
+        onStart={() => {
+          setDrag(true);
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            userSelect: 'none',
+            top: 0,
+            left: 0,
+            zIndex: drag ? '1' : 'none',
+            border: drag ? '2px dashed green' : 'none',
+          }}
+        >
+          {pieces.map(piece => (
+            <Piece key={piece.id} dataURL={dataURL} size={size} />
+          ))}
+        </div>
+      </Draggable>
+    </>
   );
+};
+
+Shape.propTypes = {
+  size: PropTypes.arrayOf(PropTypes.number).isRequired,
+  pieces: PropTypes.array.isRequired,
+  dataURL: PropTypes.string.isRequired,
+  loc: PropTypes.arrayOf(PropTypes.number).isRequired,
+  onDrop: PropTypes.func.isRequired,
 };
