@@ -6,6 +6,13 @@ import { Piece } from './Piece';
 export const Shape = ({ id, pieces, dataURL, loc, size, onDrop }) => {
   const [drag, setDrag] = useState(false);
 
+  if (!pieces.length) {
+    return null;
+  }
+
+  // zero-th piece is always the origin of the shape (top left corner)
+  const origin = pieces[0].location;
+
   return (
     <>
       <div
@@ -40,7 +47,7 @@ export const Shape = ({ id, pieces, dataURL, loc, size, onDrop }) => {
           }}
         >
           {pieces.map(piece => (
-            <Piece key={piece.id} dataURL={dataURL} size={size} />
+            <Piece key={piece.id} {...piece} origin={origin} />
           ))}
         </div>
       </Draggable>
@@ -51,7 +58,6 @@ export const Shape = ({ id, pieces, dataURL, loc, size, onDrop }) => {
 Shape.propTypes = {
   size: PropTypes.arrayOf(PropTypes.number).isRequired,
   pieces: PropTypes.array.isRequired,
-  dataURL: PropTypes.string.isRequired,
   loc: PropTypes.arrayOf(PropTypes.number).isRequired,
   onDrop: PropTypes.func.isRequired,
 };

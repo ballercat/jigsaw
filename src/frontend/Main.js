@@ -9,7 +9,8 @@ import AddIcon from '@material-ui/icons/Add';
 import Drawer from '@material-ui/core/Drawer';
 import Container from '@material-ui/core/Container';
 import { makeStyles } from '@material-ui/core/styles';
-import { add, multiply } from '../vector';
+import { add, multiply, subtract } from '../vector';
+import { pick } from '../utils';
 
 const useStyles = makeStyles(() => ({
   fab: {
@@ -41,53 +42,101 @@ const reducer = (state, action) => {
       return {
         ...state,
         ...action.payload,
+        groups: [],
       };
     case 'move': {
       const { id, offset } = action.payload;
       const { shapes, size } = state;
       // find if the item is next to one of it's neighbors
-      const shape = {
-        ...shapes[id],
+      const newLocation = [...Object.values(offset)];
+      let updatedPieces = {};
+      const updatePieceLocations = (delta, pieces) =>
+        pieces.forEach(id => {
+          updatedPieces[id] = {
+            ...state.pieces[id],
+            loc: add(state.pieces[id].loc, delta),
+          };
+        });
+      updatePieceLocations(
+        subtract(newLocation, shapes[id].loc),
+        shapes[id].pieces
+      );
 
-        loc: [offset.x, offset.y],
+      let updatedShapes = {
+        [id]: {
+          ...state.shapes[id],
+          loc: newLocation,
+        },
       };
-      const result = {};
+      let move = [];
 
-      if (shape.pieces[0].top) {
-        const top = shapes[shape.pieces[0].top.id];
-        result.top =
-          distance(add(shape.loc, shape.v[0]), add(top.loc, top.v[2])) < 5 &&
-          distance(add(shape.loc, shape.v[1]), add(top.loc, top.v[3])) < 5;
-      }
-      if (shape.pieces[0].bottom) {
-        const bottom = shapes[shape.pieces[0].bottom.id];
-        result.bottom =
-          distance(add(shape.loc, shape.v[2]), add(bottom.loc, bottom.v[0])) <
-            5 &&
-          distance(add(shape.loc, shape.v[3]), add(bottom.loc, bottom.v[1])) <
-            5;
-      }
-      if (shape.pieces[0].left) {
-        const left = shapes[shape.pieces[0].left.id];
-        result.left =
-          distance(add(shape.loc, shape.v[0]), add(left.loc, left.v[1])) < 5 &&
-          distance(add(shape.loc, shape.v[2]), add(left.loc, left.v[3])) < 5;
-      }
-      if (shape.pieces[0].right) {
-        const right = shapes[shape.pieces[0].right.id];
-        result.right =
-          distance(add(shape.loc, shape.v[1]), add(right.loc, right.v[0])) <
-            5 &&
-          distance(add(shape.loc, shape.v[3]), add(right.loc, right.v[2])) < 5;
-      }
+      Object.values(updatedPieces).forEach(piece => {
+        piece.unsolved = piece.unsolved.filter(([edge, { id }]) => {
+          const test = state.pieces[id];
+          let solved = false;
+          if (edge === 'top') {
+            solved =
+              distance(add(piece.loc, piece.v[0]), add(test.loc, test.v[2])) <
+                5 &&
+              distance(add(piece.loc, piece.v[1]), add(test.loc, test.v[3])) <
+                5;
+          } else if (edge === 'bottom') {
+            solved =
+              distance(add(piece.loc, piece.v[2]), add(test.loc, test.v[0])) <
+                5 &&
+              distance(add(piece.loc, piece.v[3]), add(test.loc, test.v[1])) <
+                5;
+          } else if (edge === 'left') {
+            solved =
+              distance(add(piece.loc, piece.v[0]), add(test.loc, test.v[1])) <
+                5 &&
+              distance(add(piece.loc, piece.v[2]), add(test.loc, test.v[3])) <
+                5;
+          } else if (edge === 'right') {
+            solved =
+              distance(add(piece.loc, piece.v[1]), add(test.loc, test.v[0])) <
+                5 &&
+              distance(add(piece.loc, piece.v[3]), add(test.loc, test.v[2])) <
+                5;
+          }
 
-      console.log(result);
+          if (solved) {
+            move = [...move, ...state.shapes[test.shapeId].pieces];
+          }
+
+          return !solved;
+        });
+      });
+
+      move.forEach(id => {
+        const piece = state.pieces[id];
+        const oldId = piece.shapeId;
+        updatedPieces[piece.id] = {
+          ...piece,
+          shapeId: id,
+        };
+        updatedShapes = {
+          ...updatedShapes,
+          [id]: {
+            ...state.shapes[id],
+            pieces: [...state.shapes[id].pieces, piece.id],
+          },
+          [oldId]: {
+            ...state.shapes[oldId],
+            pieces: state.shapes[oldId].pieces.filter(pid => pid !== piece.id),
+          },
+        };
+      });
 
       return {
         ...state,
         shapes: {
-          ...shapes,
-          [id]: shape,
+          ...state.shapes,
+          ...updatedShapes,
+        },
+        pieces: {
+          ...state.pieces,
+          ...updatedPieces,
         },
       };
     }
@@ -137,35 +186,55 @@ async function getImageData(imageSource, puzzle) {
 
   // We render "shapes", shapes are made up of one or more pieces. Starting
   // point is a one-to-one grouping of shape per piece
-  const shapes = puzzle.pieces.reduce((acc, piece) => {
-    const [x, y] = piece.location;
-    // get imagedata from source, paint it to destination export to image
-    const imageData = ctx.source.getImageData(
-      size[0] * x,
-      size[1] * y,
-      size[0],
-      size[1]
-    );
-    ctx.destination.clearRect(
-      0,
-      0,
-      canvas.destination.width,
-      canvas.destination.height
-    );
-    ctx.destination.putImageData(imageData, 0, 0);
+  const { shapes, pieces } = puzzle.pieces.reduce(
+    (acc, puzzlePiece) => {
+      const [x, y] = puzzlePiece.location;
+      // get imagedata from source, paint it to destination export to image
+      const imageData = ctx.source.getImageData(
+        size[0] * x,
+        size[1] * y,
+        size[0],
+        size[1]
+      );
+      ctx.destination.clearRect(
+        0,
+        0,
+        canvas.destination.width,
+        canvas.destination.height
+      );
+      ctx.destination.putImageData(imageData, 0, 0);
+      const dataURL = canvas.destination.toDataURL();
+      const unsolved = Object.entries(
+        pick(['top', 'bottom', 'left', 'right'], puzzlePiece)
+      ).filter(([_, p]) => p != null);
 
-    acc[piece.id] = {
-      id: piece.id,
-      pieces: [piece],
-      dataURL: canvas.destination.toDataURL(),
-      loc: multiply(piece.location, size),
-      v: [[0, 0], [size[0], 0], [0, size[1]], [...size]],
-    };
+      const shapeId = Object.keys(acc.shapes).length;
 
-    return acc;
-  }, {});
+      const visualPiece = {
+        ...puzzlePiece,
+        loc: multiply(puzzlePiece.location, size),
+        v: [[0, 0], [size[0], 0], [0, size[1]], [...size]],
+        size,
+        unsolved,
+        dataURL,
+        shapeId,
+      };
 
-  return { shapes, size, image };
+      const shape = {
+        id: shapeId,
+        pieces: [visualPiece.id],
+        loc: [...visualPiece.loc],
+      };
+
+      acc.shapes[shape.id] = shape;
+      acc.pieces[visualPiece.id] = visualPiece;
+
+      return acc;
+    },
+    { shapes: {}, pieces: {} }
+  );
+
+  return { shapes, size, image, pieces };
 }
 
 export const Main = () => {
@@ -180,13 +249,15 @@ export const Main = () => {
 
   const handleGenerate = (width, height) => {
     const puzzle = jigsaw(width, height);
-    getImageData(store.state.source, puzzle).then(({ shapes, size, image }) => {
-      store.dispatch({
-        type: 'generate',
-        payload: { puzzle, shapes, size, image },
-      });
-      setOpen(false);
-    });
+    getImageData(store.state.source, puzzle).then(
+      ({ shapes, size, image, pieces }) => {
+        store.dispatch({
+          type: 'generate',
+          payload: { puzzle, shapes, size, image, pieces },
+        });
+        setOpen(false);
+      }
+    );
   };
 
   return (

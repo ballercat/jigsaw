@@ -1,5 +1,6 @@
 import React from 'react';
 import { Shape } from './Shape';
+import { pick } from '../utils';
 
 export const Puzzle = ({ store }) => {
   const { shapes, size, image } = store.state;
@@ -13,13 +14,11 @@ export const Puzzle = ({ store }) => {
       id="puzzle-container"
       style={{ width: `${image.width * 2}px`, height: `${image.height * 2}px` }}
     >
-      {Object.values(shapes).map(({ id, pieces, dataURL, loc }) => (
+      {Object.values(shapes).map(shape => (
         <Shape
-          key={id}
-          id={id}
-          loc={loc}
-          dataURL={dataURL}
-          pieces={pieces}
+          key={shape.id}
+          {...shape}
+          pieces={Object.values(pick(shape.pieces, store.state.pieces))}
           size={size}
           onDrop={handleDrop}
         />
