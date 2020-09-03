@@ -108,25 +108,29 @@ const reducer = (state, action) => {
         });
       });
 
-      move.forEach(id => {
-        const piece = state.pieces[id];
-        const oldId = piece.shapeId;
-        updatedPieces[piece.id] = {
-          ...piece,
-          shapeId: id,
-        };
-        updatedShapes = {
-          ...updatedShapes,
-          [id]: {
-            ...state.shapes[id],
-            pieces: [...state.shapes[id].pieces, piece.id],
-          },
-          [oldId]: {
-            ...state.shapes[oldId],
-            pieces: state.shapes[oldId].pieces.filter(pid => pid !== piece.id),
-          },
-        };
-      });
+      move
+        .map(pieceId => state.pieces[pieceId])
+        .forEach(piece => {
+          const oldShapeId = piece.shapeId;
+
+          updatedPieces[piece.id] = {
+            ...piece,
+            shapeId: id,
+          };
+          updatedShapes = {
+            ...updatedShapes,
+            [id]: {
+              ...state.shapes[id],
+              pieces: [...state.shapes[id].pieces, piece.id],
+            },
+            [oldShapeId]: {
+              ...state.shapes[oldShapeId],
+              pieces: state.shapes[oldShapeId].pieces.filter(
+                pid => pid !== piece.id
+              ),
+            },
+          };
+        });
 
       return {
         ...state,
