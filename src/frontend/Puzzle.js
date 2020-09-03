@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Shape } from './Shape';
 import { pick } from '../utils';
 
@@ -25,4 +26,8 @@ export const Puzzle = ({ store }) => {
       ))}
     </div>
   );
+};
+
+Puzzle.propTypes = {
+  store: PropTypes.object.isRequired,
 };

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Draggable from 'react-draggable';
 import { Piece } from './Piece';
 
-export const Shape = ({ id, pieces, dataURL, loc, size, onDrop }) => {
+export const Shape = ({ id, pieces, loc, onDrop }) => {
   const [drag, setDrag] = useState(false);
 
   if (!pieces.length) {
@@ -56,6 +56,7 @@ export const Shape = ({ id, pieces, dataURL, loc, size, onDrop }) => {
 };
 
 Shape.propTypes = {
+  id: PropTypes.string.isRequired,
   size: PropTypes.arrayOf(PropTypes.number).isRequired,
   pieces: PropTypes.array.isRequired,
   loc: PropTypes.arrayOf(PropTypes.number).isRequired,

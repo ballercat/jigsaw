@@ -41,7 +41,7 @@ function generate(x, y, w, h, pieces) {
 export default function jigsaw(width, height) {
   // start at root
   const pieces = [];
-  const root = generate(0, 0, width, height, pieces);
+  generate(0, 0, width, height, pieces);
 
   const at = (x, y) => {
     return pieces[y * width + x];
@@ -52,6 +52,6 @@ export default function jigsaw(width, height) {
     height,
     pieces,
     at,
-    test(piece) {},
+    test() {},
   };
 }

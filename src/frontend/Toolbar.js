@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
@@ -47,8 +48,6 @@ export const actions = store => {
     onLoad(source) {
       store.dispatch({ type: 'load-image', payload: { source, blob: null } });
     },
-    onGenerate(width, height) {
-    },
   };
 };
 
@@ -83,4 +82,9 @@ export const Toolbar = props => {
       </Box>
     </div>
   );
+};
+
+Toolbar.propTypes = {
+  store: PropTypes.object.isRequired,
+  onGenerate: PropTypes.func.isRequired,
 };

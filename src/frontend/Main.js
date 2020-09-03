@@ -22,9 +22,6 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const check = (a, b) => {
-  return Math.abs(a - b) < 5;
-};
 const distance = (v1, v2) => {
   const [x1, y1] = v1;
   const [x2, y2] = v2;
@@ -46,7 +43,7 @@ const reducer = (state, action) => {
       };
     case 'move': {
       const { id, offset } = action.payload;
-      const { shapes, size } = state;
+      const { shapes } = state;
       // find if the item is next to one of it's neighbors
       const newLocation = [...Object.values(offset)];
       let updatedPieces = {};

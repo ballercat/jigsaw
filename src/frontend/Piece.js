@@ -4,7 +4,6 @@
 // TODO: edge decorators
 import React from 'react';
 import PropTypes from 'prop-types';
-import Draggable from 'react-draggable';
 import { subtract, multiply } from '../vector';
 
 export const Piece = ({ dataURL, size, origin, location }) => {
