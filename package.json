@@ -9,7 +9,7 @@
     "@babel/core": "^7.7.7",
     "@babel/preset-env": "^7.7.7",
     "@babel/register": "^7.10.5",
-    "ava": "^2.4.0",
+    "ava": "^3",
     "babel-loader": "^8.0.6",
     "css-loader": "^3.4.2",
     "cypress": "^4.12.1",

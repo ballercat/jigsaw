@@ -11,6 +11,7 @@ import Container from '@material-ui/core/Container';
 import { makeStyles } from '@material-ui/core/styles';
 import { add, multiply, subtract } from '../vector';
 import { pick } from '../utils';
+import { updateLocations } from './reducer';
 
 const useStyles = makeStyles(() => ({
   fab: {
@@ -46,6 +47,7 @@ const reducer = (state, action) => {
       const { shapes } = state;
       // find if the item is next to one of it's neighbors
       const newLocation = [...Object.values(offset)];
+
       let updatedPieces = {};
       const updatePieceLocations = (delta, pieces) =>
         pieces.forEach(id => {
@@ -90,6 +92,7 @@ const reducer = (state, action) => {
               distance(add(piece.loc, piece.v[2]), add(test.loc, test.v[3])) <
                 5;
           } else if (edge === 'right') {
+            debugger;
             solved =
               distance(add(piece.loc, piece.v[1]), add(test.loc, test.v[0])) <
                 5 &&
@@ -105,6 +108,7 @@ const reducer = (state, action) => {
         });
       });
 
+      // Move the pieces currently being moved into the found shape
       move
         .map(pieceId => state.pieces[pieceId])
         .forEach(piece => {
@@ -112,19 +116,21 @@ const reducer = (state, action) => {
 
           updatedPieces[piece.id] = {
             ...piece,
+            ...updatedPieces[piece.id],
             shapeId: id,
           };
           updatedShapes = {
             ...updatedShapes,
             [id]: {
               ...state.shapes[id],
-              pieces: [...state.shapes[id].pieces, piece.id],
+              pieces: [
+                ...state.shapes[id].pieces,
+                ...state.shapes[oldShapeId].pieces,
+              ],
             },
             [oldShapeId]: {
               ...state.shapes[oldShapeId],
-              pieces: state.shapes[oldShapeId].pieces.filter(
-                pid => pid !== piece.id
-              ),
+              pieces: [],
             },
           };
         });
@@ -244,6 +250,8 @@ export const Main = () => {
   const [state, dispatch] = useReducer(reducer, {
     source: null,
     savedImage,
+    shapes: [],
+    pieces: [],
   });
   const store = { state, dispatch };
   const styles = useStyles();

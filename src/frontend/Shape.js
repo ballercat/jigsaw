@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Draggable from 'react-draggable';
 import { Piece } from './Piece';
 
-export const Shape = ({ id, pieces, loc, onDrop }) => {
+export const Shape = ({ id, pieces, loc, onDrop, state }) => {
   const [drag, setDrag] = useState(false);
 
   if (!pieces.length) {
@@ -15,17 +15,6 @@ export const Shape = ({ id, pieces, loc, onDrop }) => {
 
   return (
     <>
-      <div
-        style={{
-          position: 'absolute',
-          top: `${loc[0]}px`,
-          left: `${loc[1]}px`,
-          width: '5px',
-          height: '5px',
-          backgroundColor: 'red',
-          zIndex: '100',
-        }}
-      />
       <Draggable
         defaultPosition={{ x: loc[0], y: loc[1] }}
         onStop={(_, { x, y }) => {
@@ -40,14 +29,15 @@ export const Shape = ({ id, pieces, loc, onDrop }) => {
           style={{
             position: 'absolute',
             userSelect: 'none',
+
             top: 0,
             left: 0,
             zIndex: drag ? '1' : 'none',
-            border: drag ? '2px dashed green' : 'none',
+            border: '5px dashed green',
           }}
         >
           {pieces.map(piece => (
-            <Piece key={piece.id} {...piece} origin={origin} />
+            <Piece key={piece.id} {...piece} origin={origin} state={state} />
           ))}
         </div>
       </Draggable>

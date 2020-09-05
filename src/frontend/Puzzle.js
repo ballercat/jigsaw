@@ -22,6 +22,7 @@ export const Puzzle = ({ store }) => {
           pieces={Object.values(pick(shape.pieces, store.state.pieces))}
           size={size}
           onDrop={handleDrop}
+          state={store.state}
         />
       ))}
     </div>

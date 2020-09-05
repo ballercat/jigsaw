@@ -20,7 +20,7 @@ function generate(x, y, w, h, pieces) {
     return y * w + x;
   };
 
-  const piece = { id: ++uuid };
+  const piece = { id: uuid++ };
   piece.location = [x, y];
   pieces[loc(x, y)] = piece;
 

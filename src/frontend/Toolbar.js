@@ -43,7 +43,7 @@ export const actions = store => {
       filereader.addEventListener('load', () => {
         localStorage.setItem('image', filereader.result);
       });
-      filereader.readAsDataURL(store.state.imageBlock.blob);
+      filereader.readAsDataURL(store.state.blob);
     },
     onLoad(source) {
       store.dispatch({ type: 'load-image', payload: { source, blob: null } });
@@ -68,7 +68,7 @@ export const Toolbar = props => {
             <Button onClick={handleLoad}>Load</Button>
             <Button
               variant="contained"
-              onClick={() => onGenerate(10, 10)}
+              onClick={() => onGenerate(5, 5)}
               disabled={source == null}
               color="primary"
             >
