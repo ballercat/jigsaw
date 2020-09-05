@@ -62,7 +62,7 @@ export const Toolbar = props => {
       <Box p={2}>
         <Grid container direction="column">
           <Grid item>
-            <Button onClick={onSave} disabled={!!source}>
+            <Button onClick={onSave} disabled={!source}>
               Save
             </Button>
             <Button onClick={handleLoad}>Load</Button>
