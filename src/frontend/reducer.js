@@ -37,7 +37,23 @@ const distance = (v1, v2) => {
   return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
 };
 
-export const findConnections = (state, action) => {
+const mapById = items =>
+  items.reduce((a, v) => {
+    a[v.id] = v;
+    return a;
+  }, {});
+const inverseEdge = {
+  top: 'bottom',
+  bottom: 'top',
+  left: 'right',
+  right: 'left',
+};
+const solveEdge = (edge, unsolved) =>
+  unsolved.filter(([unsolvedEdge]) => {
+    return unsolvedEdge !== edge;
+  });
+
+export const connect = (state, action) => {
   const { threshold } = state;
   const verticalTest = (a, b) => {
     return (
@@ -46,47 +62,77 @@ export const findConnections = (state, action) => {
     );
   };
 
+  const horizontalTest = (a, b) => {
+    return (
+      distance(add(a.loc, a.v[0]), add(b.loc, b.v[2])) <= threshold &&
+      distance(add(a.loc, a.v[1]), add(b.loc, b.v[3])) <= threshold
+    );
+  };
+
   return state.shapes[action.payload.id].pieces.reduce((a, pieceId) => {
     const piece = state.pieces[pieceId];
 
-    const { unsolved, matched } = piece.unsolved.reduce(
+    const { unsolved, matchedPieces, affectedShapes } = piece.unsolved.reduce(
       (a, v) => {
         const [edge, { id }] = v;
         const test = state.pieces[id];
         let match = false;
         if (edge === 'top') {
-          match =
-            distance(add(piece.loc, piece.v[0]), add(test.loc, test.v[2])) <
-              5 &&
-            distance(add(piece.loc, piece.v[1]), add(test.loc, test.v[3])) < 5;
+          match = horizontalTest(piece, test);
         } else if (edge === 'bottom') {
-          match =
-            distance(add(piece.loc, piece.v[2]), add(test.loc, test.v[0])) <
-              5 &&
-            distance(add(piece.loc, piece.v[3]), add(test.loc, test.v[1])) < 5;
+          match = horizontalTest(test, piece);
         } else if (edge === 'left') {
-          match =
-            distance(add(piece.loc, piece.v[0]), add(test.loc, test.v[1])) <
-              5 &&
-            distance(add(piece.loc, piece.v[2]), add(test.loc, test.v[3])) < 5;
+          match = verticalTest(test, piece);
         } else if (edge === 'right') {
           match = verticalTest(piece, test);
         }
 
         if (match) {
-          a.matched = [...a.matched, ...state.shapes[test.shapeId].pieces];
+          a.matchedPieces = {
+            ...a.matchedPieces,
+            ...mapById(
+              state.shapes[test.shapeId].pieces.map(swapId => ({
+                ...state.pieces[swapId],
+                shapeId: piece.shapeId,
+                unsolved: solveEdge(
+                  inverseEdge[edge],
+                  state.pieces[swapId].unsolved
+                ),
+              }))
+            ),
+          };
+          a.affectedShapes = {
+            ...a.affectedShapes,
+            [piece.shapeId]: {
+              ...state.shapes[piece.shapeId],
+              pieces: [
+                ...state.shapes[piece.shapeId].pieces,
+                ...state.shapes[test.shapeId].pieces,
+              ],
+            },
+            [test.shapeId]: {
+              ...state.shapes[test.shapeId],
+              pieces: [],
+            },
+          };
         } else {
           a.unsolved.push(v);
         }
 
         return a;
       },
-      { unsolved: [], matched: [] }
+      { unsolved: [], matchedPieces: {}, affectedShapes: {} }
     );
 
     return {
       ...a,
+      shapes: {
+        ...a.shapes,
+        ...affectedShapes,
+      },
       pieces: {
+        ...a.pieces,
+        ...matchedPieces,
         [pieceId]: {
           ...piece,
           unsolved,

@@ -1,6 +1,6 @@
 // Test connecting of pieces
 import test from 'ava';
-import { updateLocations, findConnections } from '../reducer.js';
+import { updateLocations, connect } from '../reducer.js';
 
 test('location updates', t => {
   const state = {
@@ -56,52 +56,169 @@ test('location updates', t => {
   });
 });
 
-test.only('piece connection', t => {
-  const state = {
-    threshold: 10,
-    shapes: {
-      0: {
-        id: 0,
-        pieces: [0],
-        loc: [0, 0],
-      },
-      1: {
-        id: 1,
-        pieces: [1],
-        loc: [40, 40],
-      },
+const baseState = {
+  threshold: 10,
+  shapes: {
+    0: {
+      id: 0,
+      pieces: [0],
+      loc: [0, 0],
     },
-    pieces: {
-      0: {
-        id: 0,
-        shapeId: 0,
-        loc: [0, 0],
-        v: [
-          [0, 0],
-          [10, 0],
-          [0, 10],
-          [10, 10],
-        ],
-        unsolved: [['right', { id: 1 }]],
-      },
-      1: {
-        id: 1,
-        shapeId: 1,
-        loc: [40, 40],
-        v: [
-          [0, 0],
-          [10, 0],
-          [0, 10],
-          [10, 10],
-        ],
-        unsolved: [['left', { id: 0 }]],
-      },
+    1: {
+      id: 1,
+      pieces: [1],
+      loc: [40, 40],
     },
-  };
+    2: {
+      id: 2,
+      pieces: [2],
+      loc: [100, 100],
+    },
+  },
+  pieces: {
+    0: {
+      id: 0,
+      shapeId: 0,
+      loc: [0, 0],
+      v: [
+        [0, 0],
+        [10, 0],
+        [0, 10],
+        [10, 10],
+      ],
+      unsolved: [
+        ['right', { id: 1 }],
+        ['bottom', { id: 2 }],
+      ],
+    },
+    1: {
+      id: 1,
+      shapeId: 1,
+      loc: [40, 40],
+      v: [
+        [0, 0],
+        [10, 0],
+        [0, 10],
+        [10, 10],
+      ],
+      unsolved: [['left', { id: 0 }]],
+    },
+    2: {
+      id: 2,
+      shapeId: 2,
+      loc: [100, 100],
+      v: [
+        [0, 0],
+        [10, 0],
+        [0, 10],
+        [10, 10],
+      ],
+      unsolved: [['top', { id: 0 }]],
+    },
+  },
+};
 
-  let action = {
+test('vertical connections', t => {
+  const moveRight = {
     type: 'move',
     payload: { id: 0, offset: { x: 32, y: 40 } },
   };
-  let result = findConnections(updateLocations(state, action), action);
+  let result = connect(updateLocations(baseState, moveRight), moveRight);
+
+  t.like(result.shapes[0], {
+    pieces: [0, 1],
+  });
+
+  // Two pieces matches, both are "solved" vertically
+  t.like(result.pieces[0], {
+    shapeId: 0,
+    unsolved: [['bottom', { id: 2 }]],
+  });
+  t.like(result.pieces[1], {
+    shapeId: 0,
+    unsolved: [],
+  });
+
+  // unrelated piece is left alone
+  t.like(result.pieces[2], {
+    shapeId: 2,
+    unsolved: [['top', { id: 0 }]],
+  });
+
+  // move the 2nd shape over to the left next to the first one
+  const moveLeft = {
+    type: 'move',
+    payload: { id: 1, offset: { x: 20, y: 0 } },
+  };
+
+  result = connect(updateLocations(baseState, moveLeft), moveLeft);
+
+  // Similar result as before. Two pieces matches, both are "solved" vertically
+  t.like(result.pieces[0], {
+    shapeId: 1,
+    unsolved: [['bottom', { id: 2 }]],
+  });
+  t.like(result.pieces[1], {
+    shapeId: 1,
+    unsolved: [],
+  });
+
+  // unrelated piece is left alone
+  t.like(result.pieces[2], {
+    shapeId: 2,
+    unsolved: [['top', { id: 0 }]],
+  });
+});
+
+test('horizontal connections', t => {
+  const moveTop = {
+    type: 'move',
+    payload: { id: 0, offset: { x: 100, y: 90 } },
+  };
+  let result = connect(updateLocations(baseState, moveTop), moveTop);
+
+  t.like(result.shapes[0], {
+    pieces: [0, 2],
+  });
+
+  // Two pieces matches, both are "solved" vertically
+  t.like(result.pieces[0], {
+    shapeId: 0,
+    unsolved: [['right', { id: 1 }]],
+  });
+  t.like(result.pieces[2], {
+    shapeId: 0,
+    unsolved: [],
+  });
+
+  // unrelated piece is left alone
+  t.like(result.pieces[1], {
+    shapeId: 1,
+    unsolved: [['left', { id: 0 }]],
+  });
+
+  const moveBottom = {
+    type: 'move',
+    payload: { id: 2, offset: { x: 0, y: 20 } },
+  };
+  result = connect(updateLocations(baseState, moveBottom), moveBottom);
+
+  t.like(result.shapes[2], {
+    pieces: [2, 0],
+  });
+  // Two pieces matches, both are "solved" vertically
+  t.like(result.pieces[0], {
+    shapeId: 2,
+    unsolved: [['right', { id: 1 }]],
+  });
+  t.like(result.pieces[2], {
+    shapeId: 2,
+    unsolved: [],
+  });
+
+  // unrelated piece is left alone
+  t.like(result.pieces[1], {
+    shapeId: 1,
+    unsolved: [['left', { id: 0 }]],
+  });
 });
