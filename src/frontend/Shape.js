@@ -11,7 +11,6 @@ export const Shape = ({ id, pieces, loc, onDrop, state }) => {
       <Draggable
         defaultPosition={{ x: loc[0], y: loc[1] }}
         onStop={(_, { x, y }) => {
-          console.log('STOP', id);
           onDrop(id, { x, y });
           setDrag(false);
         }}
