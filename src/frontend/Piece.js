@@ -6,11 +6,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { subtract, multiply } from '../vector';
 
-export const Piece = ({ id, state, dataURL, size, origin, location }) => {
+export const Piece = ({ id, dataURL, size, origin, location }) => {
   // Using a span with a background-url instead of an image with a src gets
   // around some annoying browser specific draggable image behavior
   const loc = multiply(subtract(location, origin), size);
-  const piece = state.pieces[id];
+
   return (
     <>
       <div
@@ -23,7 +23,7 @@ export const Piece = ({ id, state, dataURL, size, origin, location }) => {
           color: 'white',
         }}
       >
-        {Math.round(piece.loc[0])},{Math.round(piece.loc[1])})
+        {id}
       </div>
       <div
         style={{

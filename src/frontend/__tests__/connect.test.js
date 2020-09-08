@@ -222,3 +222,50 @@ test('horizontal connections', t => {
     unsolved: [['left', { id: 0 }]],
   });
 });
+
+test.only('multiple matches', t => {
+  const customState = {
+    ...baseState,
+    shapes: {
+      ...baseState.shapes,
+      1: {
+        ...baseState.shapes[1],
+        pieces: [1, 2],
+      },
+    },
+    pieces: {
+      ...baseState.pieces,
+      2: {
+        ...baseState.pieces[2],
+        shapeId: 1,
+        loc: [30, 50],
+      },
+    },
+  };
+
+  const moveMatch = {
+    type: 'move',
+    payload: { id: 0, offset: { x: 32, y: 40 } },
+  };
+
+  let result = connect(updateLocations(customState, moveMatch), moveMatch);
+
+  t.like(result.shapes[0], {
+    pieces: [0, 1, 2],
+  });
+
+  t.like(result.pieces[0], {
+    shapeId: 0,
+    unsolved: [],
+  });
+
+  t.like(result.pieces[1], {
+    shapeId: 0,
+    unsolved: [],
+  });
+
+  t.like(result.pieces[2], {
+    shapeId: 0,
+    unsolved: [],
+  });
+});

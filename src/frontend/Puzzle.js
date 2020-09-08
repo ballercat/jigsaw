@@ -19,7 +19,7 @@ export const Puzzle = ({ store }) => {
         <Shape
           key={shape.id}
           {...shape}
-          pieces={Object.values(pick(shape.pieces, store.state.pieces))}
+          pieces={shape.pieces.map(k => store.state.pieces[k])}
           size={size}
           onDrop={handleDrop}
           state={store.state}

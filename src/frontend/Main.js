@@ -9,9 +9,9 @@ import AddIcon from '@material-ui/icons/Add';
 import Drawer from '@material-ui/core/Drawer';
 import Container from '@material-ui/core/Container';
 import { makeStyles } from '@material-ui/core/styles';
-import { add, multiply, subtract } from '../vector';
+import { multiply } from '../vector';
 import { pick } from '../utils';
-import { updateLocations } from './reducer';
+import { connect, updateLocations } from './reducer';
 
 const useStyles = makeStyles(() => ({
   fab: {
@@ -23,13 +23,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const distance = (v1, v2) => {
-  const [x1, y1] = v1;
-  const [x2, y2] = v2;
-  return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-};
-
-const reducer = (state, action) => {
+const reducerInner = (state, action) => {
   switch (action.type) {
     case 'load-image':
       return {
@@ -43,113 +37,16 @@ const reducer = (state, action) => {
         groups: [],
       };
     case 'move': {
-      const { id, offset } = action.payload;
-      const { shapes } = state;
-      // find if the item is next to one of it's neighbors
-      const newLocation = [...Object.values(offset)];
-
-      let updatedPieces = {};
-      const updatePieceLocations = (delta, pieces) =>
-        pieces.forEach(id => {
-          updatedPieces[id] = {
-            ...state.pieces[id],
-            loc: add(state.pieces[id].loc, delta),
-          };
-        });
-      updatePieceLocations(
-        subtract(newLocation, shapes[id].loc),
-        shapes[id].pieces
-      );
-
-      let updatedShapes = {
-        [id]: {
-          ...state.shapes[id],
-          loc: newLocation,
-        },
-      };
-      let move = [];
-
-      Object.values(updatedPieces).forEach(piece => {
-        piece.unsolved = piece.unsolved.filter(([edge, { id }]) => {
-          const test = state.pieces[id];
-          let solved = false;
-          if (edge === 'top') {
-            solved =
-              distance(add(piece.loc, piece.v[0]), add(test.loc, test.v[2])) <
-                5 &&
-              distance(add(piece.loc, piece.v[1]), add(test.loc, test.v[3])) <
-                5;
-          } else if (edge === 'bottom') {
-            solved =
-              distance(add(piece.loc, piece.v[2]), add(test.loc, test.v[0])) <
-                5 &&
-              distance(add(piece.loc, piece.v[3]), add(test.loc, test.v[1])) <
-                5;
-          } else if (edge === 'left') {
-            solved =
-              distance(add(piece.loc, piece.v[0]), add(test.loc, test.v[1])) <
-                5 &&
-              distance(add(piece.loc, piece.v[2]), add(test.loc, test.v[3])) <
-                5;
-          } else if (edge === 'right') {
-            debugger;
-            solved =
-              distance(add(piece.loc, piece.v[1]), add(test.loc, test.v[0])) <
-                5 &&
-              distance(add(piece.loc, piece.v[3]), add(test.loc, test.v[2])) <
-                5;
-          }
-
-          if (solved) {
-            move = [...move, ...state.shapes[test.shapeId].pieces];
-          }
-
-          return !solved;
-        });
-      });
-
-      // Move the pieces currently being moved into the found shape
-      move
-        .map(pieceId => state.pieces[pieceId])
-        .forEach(piece => {
-          const oldShapeId = piece.shapeId;
-
-          updatedPieces[piece.id] = {
-            ...piece,
-            ...updatedPieces[piece.id],
-            shapeId: id,
-          };
-          updatedShapes = {
-            ...updatedShapes,
-            [id]: {
-              ...state.shapes[id],
-              pieces: [
-                ...state.shapes[id].pieces,
-                ...state.shapes[oldShapeId].pieces,
-              ],
-            },
-            [oldShapeId]: {
-              ...state.shapes[oldShapeId],
-              pieces: [],
-            },
-          };
-        });
-
-      return {
-        ...state,
-        shapes: {
-          ...state.shapes,
-          ...updatedShapes,
-        },
-        pieces: {
-          ...state.pieces,
-          ...updatedPieces,
-        },
-      };
+      return connect(updateLocations(state, action), action);
     }
     default:
       return state;
   }
+};
+const reducer = (state, action) => {
+  state = reducerInner(state, action);
+  window.state = state;
+  return state;
 };
 
 function loadImage(source) {
@@ -248,6 +145,7 @@ export const Main = () => {
   const [open, setOpen] = useState(true);
   const savedImage = localStorage.getItem('image');
   const [state, dispatch] = useReducer(reducer, {
+    threshold: 10,
     source: null,
     savedImage,
     shapes: [],

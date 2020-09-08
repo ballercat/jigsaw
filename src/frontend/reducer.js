@@ -53,6 +53,15 @@ const solveEdge = (edge, unsolved) =>
     return unsolvedEdge !== edge;
   });
 
+const removeEmptyShapes = shapes => {
+  return Object.entries(shapes).reduce((a, [key, shape]) => {
+    if (shape.pieces.length) {
+      a[key] = shape;
+    }
+    return a;
+  }, {});
+};
+
 export const connect = (state, action) => {
   const { threshold } = state;
   const verticalTest = (a, b) => {
@@ -91,14 +100,20 @@ export const connect = (state, action) => {
           a.matchedPieces = {
             ...a.matchedPieces,
             ...mapById(
-              state.shapes[test.shapeId].pieces.map(swapId => ({
-                ...state.pieces[swapId],
-                shapeId: piece.shapeId,
-                unsolved: solveEdge(
-                  inverseEdge[edge],
-                  state.pieces[swapId].unsolved
-                ),
-              }))
+              state.shapes[test.shapeId].pieces.map(swapId => {
+                const swapPiece =
+                  a.matchedPieces[swapId] || state.pieces[swapId];
+                const unsolved =
+                  swapId === test.id
+                    ? solveEdge(inverseEdge[edge], swapPiece.unsolved)
+                    : swapPiece.unsolved;
+
+                return {
+                  ...swapPiece,
+                  shapeId: piece.shapeId,
+                  unsolved,
+                };
+              })
             ),
           };
           a.affectedShapes = {
@@ -106,8 +121,13 @@ export const connect = (state, action) => {
             [piece.shapeId]: {
               ...state.shapes[piece.shapeId],
               pieces: [
-                ...state.shapes[piece.shapeId].pieces,
-                ...state.shapes[test.shapeId].pieces,
+                // we might be already matching to this shape so make sure to use it
+                ...(
+                  a.affectedShapes[piece.shapeId] || state.shapes[piece.shapeId]
+                ).pieces,
+                ...(
+                  a.affectedShapes[test.shapeId] || state.shapes[test.shapeId]
+                ).pieces,
               ],
             },
             [test.shapeId]: {
@@ -126,10 +146,10 @@ export const connect = (state, action) => {
 
     return {
       ...a,
-      shapes: {
+      shapes: removeEmptyShapes({
         ...a.shapes,
         ...affectedShapes,
-      },
+      }),
       pieces: {
         ...a.pieces,
         ...matchedPieces,
